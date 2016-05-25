@@ -21,7 +21,7 @@ AM_CFLAGS += -Wconversion -Wsign-compare
 AM_CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls -Wmissing-declarations
 
 AM_LDFLAGS =
-AM_LDFLAGS += -lm -lpthread -rdynamic
+AM_LDFLAGS += -lm -lpthread -rdynamic -lrt
 if OS_SOLARIS
 AM_LDFLAGS += -lnsl -lsocket
 endif
@@ -58,3 +58,4 @@ nutcracker_LDADD = $(top_builddir)/src/hashkit/libhashkit.a
 nutcracker_LDADD += $(top_builddir)/src/proto/libproto.a
 nutcracker_LDADD += $(top_builddir)/src/event/libevent.a
 nutcracker_LDADD += $(top_builddir)/contrib/yaml-0.1.4/src/.libs/libyaml.a
+nutcracker_LDADD += $(top_builddir)/contrib/jemalloc-4.2.0/lib/libjemalloc.a

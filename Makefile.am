@@ -7,3 +7,8 @@ SUBDIRS = contrib src
 dist_man_MANS = man/nutcracker.8
 
 EXTRA_DIST = README.md NOTICE LICENSE ChangeLog conf scripts notes
+
+BUILT_SOURCES = jemalloc
+
+jemalloc:
+	cd contrib/jemalloc-4.2.0 && $(MAKE) lib/libjemalloc.a

@@ -202,6 +202,9 @@ AC_CONFIG_COMMANDS_PRE([tar xvfz contrib/yaml-0.1.4.tar.gz -C contrib])
 # Call yaml-0.1.4 ./configure recursively
 AC_CONFIG_SUBDIRS([contrib/yaml-0.1.4])
 
+AC_CONFIG_COMMANDS_PRE([tar xvf contrib/jemalloc-4.2.0.tar.bz2 -C contrib &&
+                        pushd contrib/jemalloc-4.2.0 && ./configure && popd])
+
 # Define Makefiles
 AC_CONFIG_FILES([Makefile
                  contrib/Makefile
