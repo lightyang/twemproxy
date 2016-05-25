@@ -45,6 +45,8 @@
 #define NC_MBUF_MIN_SIZE    MBUF_MIN_SIZE
 #define NC_MBUF_MAX_SIZE    MBUF_MAX_SIZE
 
+#define NC_MBUF_POOL_SIZE   0
+
 static int show_help;
 static int show_version;
 static int test_conf;
@@ -65,10 +67,11 @@ static struct option long_options[] = {
     { "stats-addr",     required_argument,  NULL,   'a' },
     { "pid-file",       required_argument,  NULL,   'p' },
     { "mbuf-size",      required_argument,  NULL,   'm' },
+    { "mbuf-pool-size", required_argument,  NULL,   'M' },
     { NULL,             0,                  NULL,    0  }
 };
 
-static char short_options[] = "hVtdDv:o:c:s:i:a:p:m:";
+static char short_options[] = "hVtdDv:o:c:s:i:a:p:m:M:";
 
 static rstatus_t
 nc_daemonize(int dump_core)
@@ -222,13 +225,15 @@ nc_show_usage(void)
         "  -i, --stats-interval=N : set stats aggregation interval in msec (default: %d msec)" CRLF
         "  -p, --pid-file=S       : set pid file (default: %s)" CRLF
         "  -m, --mbuf-size=N      : set size of mbuf chunk in bytes (default: %d bytes)" CRLF
+        "  -M, --mbuf-pool-size=M : set size of mbuf pool, 0 for unlimited (default: %d)" CRLF
         "",
         NC_LOG_DEFAULT, NC_LOG_MIN, NC_LOG_MAX,
         NC_LOG_PATH != NULL ? NC_LOG_PATH : "stderr",
         NC_CONF_PATH,
         NC_STATS_PORT, NC_STATS_ADDR, NC_STATS_INTERVAL,
         NC_PID_FILE != NULL ? NC_PID_FILE : "off",
-        NC_MBUF_SIZE);
+        NC_MBUF_SIZE,
+        NC_MBUF_POOL_SIZE);
 }
 
 static rstatus_t
@@ -296,6 +301,7 @@ nc_set_default_options(struct instance *nci)
     nci->hostname[NC_MAXHOSTNAMELEN - 1] = '\0';
 
     nci->mbuf_chunk_size = NC_MBUF_SIZE;
+    nci->mbuf_pool_size = NC_MBUF_POOL_SIZE;
 
     nci->pid = (pid_t)-1;
     nci->pid_filename = NULL;
@@ -405,6 +411,16 @@ nc_get_options(int argc, char **argv, struct instance *nci)
             nci->mbuf_chunk_size = (size_t)value;
             break;
 
+        case 'M':
+            value = nc_atoi(optarg, strlen(optarg));
+            if (value < 0) {
+                log_stderr("nutcracker: option -M requires a non-negative number");
+                return NC_ERROR;
+            }
+
+            nci->mbuf_pool_size = (unsigned)value;
+            break;
+
         case '?':
             switch (optopt) {
             case 'o':
@@ -415,6 +431,7 @@ nc_get_options(int argc, char **argv, struct instance *nci)
                 break;
 
             case 'm':
+            case 'M':
             case 'v':
             case 's':
             case 'i':

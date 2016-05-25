@@ -144,6 +144,7 @@ struct instance {
     char            *stats_addr;                 /* stats monitoring addr */
     char            hostname[NC_MAXHOSTNAMELEN]; /* hostname */
     size_t          mbuf_chunk_size;             /* mbuf chunk size */
+    unsigned        mbuf_pool_size;              /* mbuf memory pool size */
     pid_t           pid;                         /* process id */
     char            *pid_filename;               /* pid filename */
     unsigned        pidfile:1;                   /* pid file created? */

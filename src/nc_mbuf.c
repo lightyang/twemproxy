@@ -22,6 +22,7 @@
 
 static uint32_t nfree_mbufq;   /* # free mbuf */
 static struct mhdr free_mbufq; /* free mbuf q */
+static uint32_t mbufq_size;    /* max # free mbuf */
 
 static size_t mbuf_chunk_size; /* mbuf chunk size - header + data (const) */
 static size_t mbuf_offset;     /* mbuf offset in chunk (const) */
@@ -123,8 +124,12 @@ mbuf_put(struct mbuf *mbuf)
     ASSERT(STAILQ_NEXT(mbuf, next) == NULL);
     ASSERT(mbuf->magic == MBUF_MAGIC);
 
-    nfree_mbufq++;
-    STAILQ_INSERT_HEAD(&free_mbufq, mbuf, next);
+    if (nfree_mbufq < mbufq_size) {
+        nfree_mbufq++;
+        STAILQ_INSERT_HEAD(&free_mbufq, mbuf, next);
+    } else {
+        mbuf_free(mbuf);
+    }
 }
 
 /*
@@ -267,9 +272,11 @@ mbuf_init(struct instance *nci)
 
     mbuf_chunk_size = nci->mbuf_chunk_size;
     mbuf_offset = mbuf_chunk_size - MBUF_HSIZE;
+    // use max uint32_t when no limit is set to simplify the check in mbuf_put
+    mbufq_size = nci->mbuf_pool_size ? nci->mbuf_pool_size : ~0U;
 
-    log_debug(LOG_DEBUG, "mbuf hsize %d chunk size %zu offset %zu length %zu",
-              MBUF_HSIZE, mbuf_chunk_size, mbuf_offset, mbuf_offset);
+    log_debug(LOG_DEBUG, "mbuf hsize %d chunk size %zu pool size %u offset %zu length %zu",
+              MBUF_HSIZE, mbuf_chunk_size, mbufq_size, mbuf_offset, mbuf_offset);
 }
 
 void
