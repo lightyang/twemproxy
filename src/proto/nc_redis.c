@@ -2328,13 +2328,17 @@ redis_copy_bulk(struct msg *dst, struct msg *src)
 
     /* copy len bytes to dst */
     for (; mbuf;) {
-        if (mbuf_length(mbuf) <= len) {     /* steal this buf from src to dst */
+        uint32_t mbuf_len = mbuf_length(mbuf);
+        if (mbuf_len <= len) {     /* steal this buf from src to dst */
             nbuf = STAILQ_NEXT(mbuf, next);
             mbuf_remove(&src->mhdr, mbuf);
             if (dst != NULL) {
                 mbuf_insert(&dst->mhdr, mbuf);
+                dst->mlen += mbuf_len;
+            } else {
+                mbuf_put(mbuf);
             }
-            len -= mbuf_length(mbuf);
+            len -= mbuf_len;
             mbuf = nbuf;
         } else {                             /* split it */
             if (dst != NULL) {
@@ -2348,9 +2352,6 @@ redis_copy_bulk(struct msg *dst, struct msg *src)
         }
     }
 
-    if (dst != NULL) {
-        dst->mlen += bytes;
-    }
     src->mlen -= bytes;
     log_debug(LOG_VVERB, "redis_copy_bulk copy bytes: %d", bytes);
     return NC_OK;
